@@ -37,14 +37,14 @@ namespace Company.Function
                     var imgBytes = mStream.ToArray();
                     using (Mat image = Mat.FromImageData(imgBytes, ImreadModes.Unchanged))
                     {
-                        var newSize = new Size(640, 480);
-                        using var frame = new Mat();
-                        Cv2.Resize(image, frame, newSize);
+                        // var newSize = new Size(640, 480);
+                        // using var frame = new Mat();
+                        // Cv2.Resize(image, frame, newSize);
 
-                        int frameHeight = frame.Rows;
-                        int frameWidth = frame.Cols;
+                        int frameHeight = image.Rows;
+                        int frameWidth = image.Cols;
 
-                        using var blob = CvDnn.BlobFromImage(frame, 1.0, new Size(300, 300),
+                        using var blob = CvDnn.BlobFromImage(image, 1.0, new Size(300, 300),
                             new Scalar(104, 117, 123), false, false);
                         faceNet.SetInput(blob, "data");
 
@@ -61,21 +61,21 @@ namespace Company.Function
                                 int y1 = (int)(detectionMat.At<float>(i, 4) * frameHeight);
                                 int x2 = (int)(detectionMat.At<float>(i, 5) * frameWidth);
                                 int y2 = (int)(detectionMat.At<float>(i, 6) * frameHeight);
-                                Cv2.Rectangle(frame, new Point(x1, y1), new Point(x2, y2), Scalar.Green);
+                                Cv2.Rectangle(image, new Point(x1, y1), new Point(x2, y2), Scalar.Green);
 
                                 // create a new Mat with the detected face
-                                var faceImg = new Mat(frame,
+                                var faceImg = new Mat(image,
                                     new OpenCvSharp.Range(y1, y2),
                                     new OpenCvSharp.Range(x1, x2));
 
                                 // blur the face area in the original frame
                                 var faceBlur = new Mat();
                                 Cv2.GaussianBlur(faceImg, faceBlur, new Size(23, 23), 30);
-                                frame[new OpenCvSharp.Range(y1, y2), new OpenCvSharp.Range(x1, x2)] = faceBlur;
+                                image[new OpenCvSharp.Range(y1, y2), new OpenCvSharp.Range(x1, x2)] = faceBlur;
                             }
                         }
 
-                        return new FileContentResult(frame.ToBytes(), "application/octet-stream")
+                        return new FileContentResult(image.ToBytes(), "application/octet-stream")
                         {
                             FileDownloadName = "blurred.png"
                         };
